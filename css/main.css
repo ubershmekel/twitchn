@@ -292,6 +292,25 @@ textarea {
     line-height: 0;
 }
 
-#gameNameForm {
-    margin: 1em;
+#instructionsContainer {
+    padding: 1em;
+}
+
+#instructionsContainer form{
+    margin-left: 1em;
+}
+
+#exampleLinks a {
+    display: table;
+    margin-left: 1em;
+}
+
+.octocat {
+    width: 2em;
+    height: 2em;
+    margin: 2px;
+}
+
+a:hover {
+    font-weight: bold;
 }

@@ -28,11 +28,25 @@
     </head>
     <body>
         <div id="instructionsContainer">
-            <form id="gameNameForm" action="/" method="get">
+            <h3>Twitchn</h3>
+            <form id="gameNameForm" action="" method="get">
+                <p>
+                    Pick a game and stream multiple panels at once.
+                </p>
+                    
                 Game name: <input type="text" name="game"><br />
                 Amount of panels: <input type="text" name="panels" value="4"><br />
                 <input type="submit" value="Submit">
-            </form>            
+            </form>
+            <div id="exampleLinks">
+                <h3>Examples</h3>
+                <a href="?game=Heroes of the Storm&panels=4">Heroes of the Storm</a>
+                <a href="?game=Hearthstone: Heroes of Warcraft&panels=4">Hearthstone</a>
+                <a href="?game=League of Legends&panels=4">League of Legends</a>
+                <a href="?game=Rocket League&panels=4">Rocket League</a>
+                
+                <a href="https://github.com/ubershmekel/twitchn">Source code on github<img class="octocat" src="images/octocat.png" /></a>
+            </div>
         </div>
         <div id="streamsContainer"></div>
 
