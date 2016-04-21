@@ -4,22 +4,36 @@
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
         <title>Twitchn - Show multiple screens of a game on twitch</title>
-        <meta name="description" content="">
+        <meta name="description" content="Show multiple screens of a game on twitch">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="apple-touch-icon" href="apple-touch-icon.png">
-        <!-- Place favicon.ico in the root directory -->
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/themes/flatty.css" />
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/humane.js"></script>
+        <script>
+            humane.timeout = 3500;
+            humane.error = humane.spawn({ addnCls: 'humane-flatty-error'});
+            window.onerror = function(msg, url, linenumber) {
+                // Tell users when errors occur
+                // http://stackoverflow.com/questions/2604976/javascript-how-to-display-script-errors-in-a-popup-alert/2604997#2604997
+                humane.error("An error: " + msg);
+
+                // `false` to report on dev console too
+                return false;
+            };
+        </script>
 
         <link rel="stylesheet" href="css/normalize.css">
         <link rel="stylesheet" href="css/main.css">
         <script src="js/vendor/modernizr-2.8.3.min.js"></script>
     </head>
     <body>
-        <!--[if lt IE 8]>
-            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-        <![endif]-->
-
-        <!-- Add your site or application content here -->
+        <div id="instructionsContainer">
+            <form id="gameNameForm" action="/" method="get">
+                Game name: <input type="text" name="game"><br />
+                Amount of panels: <input type="text" name="panels" value="4"><br />
+                <input type="submit" value="Submit">
+            </form>            
+        </div>
         <div id="streamsContainer"></div>
 
         <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
