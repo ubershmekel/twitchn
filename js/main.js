@@ -144,7 +144,8 @@ $(function() {
         defaultStreamsToShow = params.panels || 4;
         gameToShow = params.game;
 
-        if(params.game) {
+        if(gameToShow) {
+            document.title = "Twitchn - " + gameToShow;
             instructionsContainer.remove();
             getTopStreams();
             var threeMinutesInMs = 1000 * 60 * 3;
