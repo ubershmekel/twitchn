@@ -92,8 +92,6 @@ $(function() {
             currentlyShowing.push(channelName);
             embedTwitch(channelName);
         }
-        
-        currentlyShowing = channels;
     }
 
     function handleData(data) {
