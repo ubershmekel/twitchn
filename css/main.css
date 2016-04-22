@@ -292,6 +292,14 @@ textarea {
     line-height: 0;
 }
 
+#streamsContainer > * {
+    position: absolute;
+    -webkit-transition: left 2s, top 2s ease;
+    -moz-transition:    left 2s, top 2s ease;
+    -o-transition:      left 2s, top 2s ease;
+    transition:         left 2s, top 2s ease;
+}
+
 #instructionsContainer {
     padding: 1em;
 }

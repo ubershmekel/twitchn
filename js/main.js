@@ -1,7 +1,7 @@
 var mydebug = {};
 
 $(function() {
-    var defaultStreamsToShow;
+    var defaultStreamsToShowCount;
     var gameToShow;
     
     var streamsContainerId = "streamsContainer";
@@ -10,6 +10,14 @@ $(function() {
     var previouslyShowingChannels = [];
     var isAjaxing = false;
 
+    function indexToPositionInTable(index, amountOfSlots) {
+        var oneDimCount = Math.ceil(Math.sqrt(amountOfSlots));
+        return {
+            x: index % oneDimCount,
+            y: Math.floor(index / oneDimCount)
+        };
+    }
+    
     function urlGetParams() {
         try {
             var search = location.search.substring(1); // `1` skips question mark
@@ -55,15 +63,12 @@ $(function() {
         streamsContainer.append($(elementStr));
     }
         
-    function embedTwitch(channelName) {
+    function embedTwitch(channelName, widthAndHeight) {
         // Using this embed mechanism
-        //var percent = "50%";
-        var oneDimCount = Math.ceil(Math.sqrt(defaultStreamsToShow));
-        var percent = Math.floor(100.0 / oneDimCount) + "%";
         
         var options = {
-            width: percent,
-            height: percent,
+            width: widthAndHeight,
+            height: widthAndHeight,
             channel: channelName
         };
         var player = new Twitch.Player(streamsContainerId, options);
@@ -73,70 +78,60 @@ $(function() {
         player.addEventListener("offline", streamWentOffline);
     }
     
-    function moveIndexToIndex(jq, indexSrc, indexDst) {
-        var src = jq.children()[indexSrc];
-        var dst = jq.children()[indexDst];
-        jq[0].insertBefore(src, dst);
+    function roundDecimal(num, precision) {
+        // Simplification of https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/round
+        // Time 10 to the power of precision and round
+        var bigger = Math.round(num + 'e' + precision);
+        // `e-` shrinks the number back down
+        // `+` converts to number
+        return +(bigger + 'e-' + precision);
     }
     
-    //streamsContainer[0].insertBefore(src, dst);function moveElement(container, be)
-    
     function showChannels(newChannels) {
-        //if(channels.equals(previouslyShowing)) {
-        //    console.log("Same channels as currently showing, not updating");
-        //    return;
-        //}
+        // Mark previous streams for deletion. This step isn't necessary
+        // but it's more explicit and provides protection against jQuery having
+        // a surprising change in its API.
         var previousElements = streamsContainer.children();
+        for(var i = 0; i < previousElements.length; i++) {
+            previousElements[i].keepAlive = false;
+        }
+        
+        // Reposition and embed channels
+        var oneDimCount = Math.ceil(Math.sqrt(defaultStreamsToShowCount));
+        // E.g. "50%" for 4 windows, "33.33%" for 9.
+        // This page says that "33.33%" is accurate enough for all screens.
+        // http://stackoverflow.com/questions/5158735/best-way-to-represent-1-3rd-of-100-in-css
+        var percentOfWindow = roundDecimal(100.0 / oneDimCount, 2);
+        
         for(var i = 0; i < newChannels.length; i++) {
             var channelName = newChannels[i];
             var previouslyShowingChannelsIndex = previouslyShowingChannels.indexOf(channelName);
+            var el;
             if(previouslyShowingChannelsIndex > -1) {
-                //if(currentlyShowingIndex == i) {
-                //    // stay where you are
-                //    console.log("Correctly placed");
-                //    continue;
-                //}
-                console.log("repositioning " + previouslyShowingChannelsIndex + " to " + i);
-                streamsContainer[0].appendChild(previousElements[previouslyShowingChannelsIndex]);
-                
-                // just move the stram to position
-                //moveIndexToIndex(streamsContainer, currentlyShowingIndex, i);
-                //var previousEl = previousElements[previouslyShowingChannelsIndex];
-                //streamsContainer[0].insertBefore(src, dst);
-                //currentlyShowing.splice(currentlyShowingIndex, 1);
-                //currentlyShowing.splice(currentlyShowingIndex, 0, channelName);
-                continue;
-            }
-            /*
-                if(currentlyShowing[i] == channelName)
-                    continue;
-                else {
-                    streamsContainer.children()[i].remove();
-                    currentlyShowing.splice(i, 1);
-                }
-            }*/
-            
-            // New stream, create it, put it at the end
-            console.log("Embedding new: " + channelName);
-            embedTwitch(channelName);
-            /*
-            if(i < currentlyShowing.length) {
-                // not the last stream
-                // based on assumption that twitch embed is the last element in the streams container
-                // we move that element to the correct index.
-                var el = streamsContainer.children().last();
-                var beforeThisEl = streamsContainer.children()[i];
-                streamsContainer[0].insertBefore(el, beforeThisEl);
-                currentlyShowing.splice(i, 0, channelName);
+                // Found loaded channel - just reposition it
+                el = previousElements[previouslyShowingChannelsIndex];
+                // Don't delete it
+                el.keepAlive = true;
             } else {
-                currentlyShowing.push(channelName);
-            }*/
+                // New stream, create it
+                console.log("Embedding new: " + channelName);
+                var widthAndHeight = percentOfWindow + "%";
+                embedTwitch(channelName, widthAndHeight);
+                el = streamsContainer.children().last()[0];
+            }
+
+            var pos = indexToPositionInTable(i, defaultStreamsToShowCount);
+            var percentX = (percentOfWindow * pos.x) + "%";
+            var percentY = (percentOfWindow * pos.y) + "%";
+            el.style.left = percentX;
+            el.style.top = percentY;
         }
         
-        // Remove excess that was not appended to end. These elements are at the start.
-        var totalChildren = streamsContainer.children().length;
-        for(var j = newChannels.length; j < totalChildren; j++) {
-            streamsContainer.children()[0].remove();
+        // Remove excess channels
+        for(var i = 0; i < previousElements.length; i++) {
+            if(previousElements[i].keepAlive)
+                continue;
+            previousElements[i].remove();
         }
         
         // Document new state
@@ -151,8 +146,8 @@ $(function() {
             return b.viewers - a.viewers;
         });
         
-        var streamsToShow = defaultStreamsToShow;
-        if (defaultStreamsToShow > streams.length)
+        var streamsToShow = defaultStreamsToShowCount;
+        if (defaultStreamsToShowCount > streams.length)
             streamsToShow = streams.length;
         
         var newChannels = [];
@@ -188,7 +183,7 @@ $(function() {
     
     function main() {
         params = urlGetParams();
-        defaultStreamsToShow = params.panels || 4;
+        defaultStreamsToShowCount = params.panels || 4;
         gameToShow = params.game;
 
         if(gameToShow) {
