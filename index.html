@@ -20,33 +20,49 @@
                 // `false` to report on dev console too
                 return false;
             };
+            function error(msg) {
+                humane.error(msg);
+                console.error(msg);
+            }
         </script>
 
         <link rel="stylesheet" href="css/normalize.css">
         <link rel="stylesheet" href="css/main.css">
         <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
     </head>
     <body>
+        
+        <script id="channelCardTemplate" type="x-tmpl-mustache">
+            {{#top}}
+                <a href="?game={{ game.name }}&panels=4" class="gameCard" title="{{ game.name }}">
+                    <img src="{{ game.box.medium }}" alt="{{ game.name }}" /><br />
+                    <p class="gameNameOnCard">{{ game.name }}</p>
+                    <p class="gameNameOnCard">{{ viewers }} / {{ channels }}</p>
+                </a>
+            {{/top}}
+            
+            <datalist id="gamesList" >
+                {{#top}}
+                    <option value="{{ game.name }}">
+                {{/top}}
+            </datalist>
+        </script>
+
+
         <div id="instructionsContainer">
+            <a id="githubLink" href="https://github.com/ubershmekel/twitchn">Source on github<img class="octocat" src="images/octocat.png" /></a>
             <h3>Twitchn</h3>
             <form id="gameNameForm" action="" method="get">
                 <p>
                     Pick a game and stream multiple panels at once.
                 </p>
-                    
-                Game name: <input type="text" name="game"><br />
-                Amount of panels: <input type="text" name="panels" value="4"><br />
-                <input type="submit" value="Submit">
+
+                Game name: <input list="gamesList" name="game" />
+                Amount of panels: <input type="text" name="panels" value="4" />
+                <input type="submit" value="Submit" />
             </form>
-            <div id="exampleLinks">
-                <h3>Examples</h3>
-                <a href="?game=Heroes of the Storm&panels=4">Heroes of the Storm</a>
-                <a href="?game=Hearthstone: Heroes of Warcraft&panels=4">Hearthstone</a>
-                <a href="?game=League of Legends&panels=4">League of Legends</a>
-                <a href="?game=Rocket League&panels=4">Rocket League</a>
-                
-                <a href="https://github.com/ubershmekel/twitchn">Source code on github<img class="octocat" src="images/octocat.png" /></a>
-            </div>
+            <div id="gameCardsContainer"></div>
         </div>
         <div id="streamsContainer"></div>
 

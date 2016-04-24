@@ -301,16 +301,13 @@ textarea {
 }
 
 #instructionsContainer {
-    padding: 1em;
+    text-align: center;
 }
 
-#instructionsContainer form{
-    margin-left: 1em;
-}
-
-#exampleLinks a {
-    display: table;
-    margin-left: 1em;
+h3 {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 0;
 }
 
 .octocat {
@@ -319,6 +316,38 @@ textarea {
     margin: 2px;
 }
 
+a {
+    text-decoration: none;
+}
+
 a:hover {
-    font-weight: bold;
+    opacity: 0.7;
+}
+
+#gameCardsContainer {
+    text-align: center;
+}
+
+.gameCard {
+    display: inline-block;
+    overflow: hidden;
+    width: 136px;
+    height: 220px;
+    border: 1px solid #DDD;
+    border-top: 2px solid #EEE;
+    margin: 2px;
+    color: #000;
+}
+
+.gameNameOnCard {
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+p {
+    margin: 0;
+}
+
+#githubLink {
+    float: right;
 }

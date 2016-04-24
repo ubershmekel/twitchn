@@ -138,9 +138,13 @@ $(function() {
         previouslyShowingChannels = newChannels;
     }
 
-    function handleData(data) {
+    function handleGameStreams(data) {
         console.log(data);
         var streams = data.streams;
+        if(!streams || streams.length === 0) {
+            error("No streams for this game");
+            return;
+        }
         streams.sort(function(a, b) {
             // most popular first
             return b.viewers - a.viewers;
@@ -171,11 +175,31 @@ $(function() {
             return;
 
         isAjaxing = true;
-        var jsonUrl = "https://api.twitch.tv/kraken/streams?game=" + gameToShow;
+        // `encodeURIComponent` because "+" turns into " " on the twitch server side
+        // so we should use %2B instead.
+        var jsonUrl = "https://api.twitch.tv/kraken/streams?game=" + encodeURIComponent(gameToShow);
         $.ajax({
             url: jsonUrl,
             dataType: 'jsonp',
-            success: handleData,
+            success: handleGameStreams,
+            error: failedAjax,
+            timeout: 5000
+        });
+    }
+    
+    function handleGamesList(data) {
+        var template = $('#channelCardTemplate').html();
+        var html = Mustache.render(template, data);
+        $('#gameCardsContainer').html(html);
+    }
+    
+    function showGamesCards() {
+        streamsContainer.remove();
+        var jsonUrl = 'https://api.twitch.tv/kraken/games/top?limit=100';
+        $.ajax({
+            url: jsonUrl,
+            dataType: 'jsonp',
+            success: handleGamesList,
             error: failedAjax,
             timeout: 5000
         });
@@ -192,8 +216,11 @@ $(function() {
             getTopStreams();
             var threeMinutesInMs = 1000 * 60 * 3;
             setInterval(getTopStreams, threeMinutesInMs);
+        } else {
+            showGamesCards();
         }
 
+        // export debug functions
         mydebug.previouslyShowingChannels = function() { return previouslyShowingChannels;};
         mydebug.showChannels = showChannels;
     }
