@@ -88,12 +88,14 @@ $(function() {
     }
     
     function showChannels(newChannels) {
-        // Mark previous streams for deletion. This step isn't necessary
-        // but it's more explicit and provides protection against jQuery having
-        // a surprising change in its API.
+        var channelKey = 'channel';
+        // Mark previous streams for deletion.
         var previousElements = streamsContainer.children();
+        previouslyShowingChannels = [];
         for(var i = 0; i < previousElements.length; i++) {
             previousElements[i].keepAlive = false;
+            var channel = $(previousElements[i]).data(channelKey);
+            previouslyShowingChannels.push(channel);
         }
         
         // Reposition and embed channels
@@ -118,6 +120,8 @@ $(function() {
                 var widthAndHeight = percentOfWindow + "%";
                 embedTwitch(channelName, widthAndHeight);
                 el = streamsContainer.children().last()[0];
+                // document this element's channel name
+                $(el).data(channelKey, channelName);
             }
 
             var pos = indexToPositionInTable(i, defaultStreamsToShowCount);
@@ -133,9 +137,6 @@ $(function() {
                 continue;
             previousElements[i].remove();
         }
-        
-        // Document new state
-        previouslyShowingChannels = newChannels;
     }
 
     function handleGameStreams(data) {
