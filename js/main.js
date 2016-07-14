@@ -40,9 +40,9 @@ $(function() {
             ' height=' + percent +
             ' width=' + percent +
             ' id="embed_' + channelName +
-            '" class="stream" data="http://www.twitch.tv/widgets/live_embed_player.swf?channel="' + channelName +
+            '" class="stream" data="https://www.twitch.tv/widgets/live_embed_player.swf?channel="' + channelName +
             '"><param name="allowFullScreen" value="true" /><param name="allowScriptAccess" value="always" /><param name="allowNetworking" value="all" />' + 
-            '<param name="movie" value="http://www.twitch.tv/widgets/live_embed_player.swf" /><param name="flashvars" value="hostname=www.twitch.tv&channel=' +
+            '<param name="movie" value="https://www.twitch.tv/widgets/live_embed_player.swf" /><param name="flashvars" value="hostname=www.twitch.tv&channel=' +
             channelName + '&auto_play=true&start_volume=0" /></object>');
         streamsContainer.append(e);
     }
@@ -52,7 +52,7 @@ $(function() {
         // but has no "offline" event.
         var percent = '"50%"'
         var elementStr = '<iframe' +
-            ' src="http://player.twitch.tv/?channel=' + channelName + '"' +
+            ' src="https://player.twitch.tv/?channel=' + channelName + '"' +
             ' height=' + percent +
             ' width=' + percent +
             ' frameborder="0"' +
