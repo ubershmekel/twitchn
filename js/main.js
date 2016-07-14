@@ -33,7 +33,7 @@ $(function() {
         getTopStreams();
     }
     
-    function embedTwitch3(channelName) {
+    function embedTwitchFlash(channelName) {
         // prevents the 10 js errors, but shows the old flash UI and seems to be a bit slower.
         var percent = '"50%"'
         var e = $('<object type="application/x-shockwave-flash"' +
@@ -47,7 +47,7 @@ $(function() {
         streamsContainer.append(e);
     }
     
-    function embedTwitch2(channelName) {
+    function embedTwitchIframe(channelName) {
         // This does not require the twitch js file
         // but has no "offline" event.
         var percent = '"50%"'
@@ -63,7 +63,7 @@ $(function() {
         streamsContainer.append($(elementStr));
     }
         
-    function embedTwitch(channelName, widthAndHeight) {
+    function embedTwitchLib(channelName, widthAndHeight) {
         // Using this embed mechanism
         
         var options = {
@@ -118,7 +118,7 @@ $(function() {
                 // New stream, create it
                 console.log("Embedding new: " + channelName);
                 var widthAndHeight = percentOfWindow + "%";
-                embedTwitch(channelName, widthAndHeight);
+                embedTwitchFlash(channelName, widthAndHeight);
                 el = streamsContainer.children().last()[0];
                 // document this element's channel name
                 $(el).data(channelKey, channelName);
