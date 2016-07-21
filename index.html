@@ -54,13 +54,19 @@
         <div id="instructionsContainer">
             <a id="githubLink" href="https://github.com/ubershmekel/twitchn">Source on github<img class="octocat" src="images/octocat.png" /></a>
             <h3>Twitchn</h3>
-            <form id="gameNameForm" action="" method="get">
+            <form id="gameNameForm" action="" method="get" enctype="text/plain">
                 <p>
                     Pick a game and watch the most popular streams on multiple panels at once
                 </p>
 
                 Game name: <input list="gamesList" name="game" />
                 Amount of panels: <input type="text" name="panels" value="4" />
+                
+                <input id="flashEmbedRadio" type="radio" value="flash" name="embed">
+                <label for="flashEmbedRadio">Flash</label>
+                <input id="htmlEmbedRadio" type="radio" value="html5" name="embed">
+                <label for="htmlEmbedRadio">HTML5</label>
+                
                 <input type="submit" value="Submit" />
             </form>
             <div id="gameCardsContainer"></div>

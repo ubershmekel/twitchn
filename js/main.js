@@ -3,6 +3,12 @@ var mydebug = {};
 $(function() {
     var defaultStreamsToShowCount;
     var gameToShow;
+    var embedTypesEnum = {
+        html5: 'html5',
+        flash: 'flash',
+        iframe: 'iframe',
+    };
+    var embedType;
     
     var streamsContainerId = "streamsContainer";
     var streamsContainer = $('#' + streamsContainerId);
@@ -87,6 +93,23 @@ $(function() {
         return +(bigger + 'e-' + precision);
     }
     
+    function embedTwitch(channelName, widthAndHeight) {
+        switch(embedType) {
+            case embedTypesEnum.iframe:
+                embedTwitchIframe(channelName, widthAndHeight);
+                break;
+            case embedTypesEnum.flash:
+                embedTwitchFlash(channelName, widthAndHeight);
+                break;
+            case embedTypesEnum.html5:
+                embedTwitchLib(channelName, widthAndHeight);
+                break;
+            default:
+                embedTwitchLib(channelName, widthAndHeight);
+                break;
+        }
+    }
+    
     function showChannels(newChannels) {
         var channelKey = 'channel';
         // Mark previous streams for deletion.
@@ -118,7 +141,7 @@ $(function() {
                 // New stream, create it
                 console.log("Embedding new: " + channelName);
                 var widthAndHeight = percentOfWindow + "%";
-                embedTwitchFlash(channelName, widthAndHeight);
+                embedTwitch(channelName, widthAndHeight);
                 el = streamsContainer.children().last()[0];
                 // document this element's channel name
                 $(el).data(channelKey, channelName);
@@ -210,6 +233,7 @@ $(function() {
         params = urlGetParams();
         defaultStreamsToShowCount = params.panels || 4;
         gameToShow = params.game;
+        embedType = params.embed;
 
         if(gameToShow) {
             document.title = "Twitchn - " + gameToShow;
