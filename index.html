@@ -36,11 +36,11 @@
         
         <script id="channelCardTemplate" type="x-tmpl-mustache">
             {{#top}}
-                <a href="?game={{ game.name }}&panels=4" class="gameCard" title="{{ game.name }}">
+                <button name="game" type="submit" value="{{ game.name }}" class="gameCard" title="{{ game.name }}">
                     <img src="{{ game.box.medium }}" alt="{{ game.name }}" /><br />
                     <p class="gameNameOnCard">{{ game.name }}</p>
                     <p class="gameNameOnCard">{{ viewers }} / {{ channels }}</p>
-                </a>
+                </button>
             {{/top}}
             
             <datalist id="gamesList" >
@@ -64,12 +64,13 @@
                 
                 <input id="flashEmbedRadio" type="radio" value="flash" name="embed">
                 <label for="flashEmbedRadio">Flash</label>
-                <input id="htmlEmbedRadio" type="radio" value="html5" name="embed">
+                <input id="htmlEmbedRadio" type="radio" value="html5" name="embed" checked="checked">
                 <label for="htmlEmbedRadio">HTML5</label>
                 
                 <input type="submit" value="Submit" />
+                
+                <div id="gameCardsContainer"></div>
             </form>
-            <div id="gameCardsContainer"></div>
         </div>
         <div id="streamsContainer"></div>
 

@@ -27,7 +27,7 @@ $(function() {
     function urlGetParams() {
         try {
             var search = location.search.substring(1); // `1` skips question mark
-            var jsonStr = '{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}';
+            var jsonStr = '{"' + decodeURIComponent(search.replace(/\+/g, '%20')).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"')  + '"}';
             return JSON.parse(jsonStr);
         } catch (e) {
             return {};
@@ -166,7 +166,7 @@ $(function() {
         console.log(data);
         var streams = data.streams;
         if(!streams || streams.length === 0) {
-            error("No streams for this game");
+            error("No streams for this game: " + gameToShow);
             return;
         }
         streams.sort(function(a, b) {
