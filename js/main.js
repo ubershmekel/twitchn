@@ -201,7 +201,7 @@ $(function() {
         isAjaxing = true;
         // `encodeURIComponent` because "+" turns into " " on the twitch server side
         // so we should use %2B instead.
-        var jsonUrl = "https://api.twitch.tv/kraken/streams?game=" + encodeURIComponent(gameToShow);
+        var jsonUrl = "https://api.twitch.tv/kraken/streams?client_id=ms529ptsbx3rk8sf3mk7m50othshk1i&game=" + encodeURIComponent(gameToShow);
         $.ajax({
             url: jsonUrl,
             dataType: 'jsonp',
@@ -219,7 +219,7 @@ $(function() {
     
     function showGamesCards() {
         streamsContainer.remove();
-        var jsonUrl = 'https://api.twitch.tv/kraken/games/top?limit=100';
+        var jsonUrl = 'https://api.twitch.tv/kraken/games/top?client_id=ms529ptsbx3rk8sf3mk7m50othshk1i&limit=100';
         $.ajax({
             url: jsonUrl,
             dataType: 'jsonp',
