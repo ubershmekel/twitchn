@@ -253,7 +253,9 @@ $(function() {
         // Refresh the entire page once in a while because the twitch
         // embeds leak memory and crash the tab every 3-6 hours
         var oneHourMs = 1000 * 60 * 60;
-        setTimeout(function() {window.location.reload();}, oneHourMs);
+        // reload(true) is a hard refresh
+        // http://stackoverflow.com/questions/2099201/javascript-hard-refresh-of-current-page
+        setTimeout(function() {window.location.reload(true);}, oneHourMs);
 
         // export debug functions
         mydebug.previouslyShowingChannels = function() { return previouslyShowingChannels;};
