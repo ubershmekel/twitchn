@@ -41,7 +41,7 @@ $(function() {
     
     function embedTwitchFlash(channelName) {
         // prevents the 10 js errors, but shows the old flash UI and seems to be a bit slower.
-        var percent = '"50%"'
+        var percent = '"50%"';
         var e = $('<object type="application/x-shockwave-flash"' +
             ' height=' + percent +
             ' width=' + percent +
@@ -56,7 +56,7 @@ $(function() {
     function embedTwitchIframe(channelName) {
         // This does not require the twitch js file
         // but has no "offline" event.
-        var percent = '"50%"'
+        var percent = '"50%"';
         var elementStr = '<iframe' +
             ' src="https://player.twitch.tv/?channel=' + channelName + '"' +
             ' height=' + percent +
@@ -128,8 +128,8 @@ $(function() {
         // http://stackoverflow.com/questions/5158735/best-way-to-represent-1-3rd-of-100-in-css
         var percentOfWindow = roundDecimal(100.0 / oneDimCount, 2);
         
-        for(var i = 0; i < newChannels.length; i++) {
-            var channelName = newChannels[i];
+        for(var j = 0; j < newChannels.length; j++) {
+            var channelName = newChannels[j];
             var previouslyShowingChannelsIndex = previouslyShowingChannels.indexOf(channelName);
             var el;
             if(previouslyShowingChannelsIndex > -1) {
@@ -147,7 +147,7 @@ $(function() {
                 $(el).data(channelKey, channelName);
             }
 
-            var pos = indexToPositionInTable(i, defaultStreamsToShowCount);
+            var pos = indexToPositionInTable(j, defaultStreamsToShowCount);
             var percentX = (percentOfWindow * pos.x) + "%";
             var percentY = (percentOfWindow * pos.y) + "%";
             el.style.left = percentX;
@@ -155,10 +155,10 @@ $(function() {
         }
         
         // Remove excess channels
-        for(var i = 0; i < previousElements.length; i++) {
-            if(previousElements[i].keepAlive)
+        for(var k = 0; k < previousElements.length; k++) {
+            if(previousElements[k].keepAlive)
                 continue;
-            previousElements[i].remove();
+            previousElements[k].remove();
         }
     }
 
@@ -181,12 +181,12 @@ $(function() {
         var newChannels = [];
         for(var i = 0; i < streamsToShow; i++) {
             var channelName = streams[i].channel.name;
-            newChannels.push(channelName)
+            newChannels.push(channelName);
         }
         
         showChannels(newChannels);
         isAjaxing = false;
-    };
+    }
     
     function failedAjax(err) {
         console.warn('Failed ajax:', err);
@@ -202,6 +202,7 @@ $(function() {
         // `encodeURIComponent` because "+" turns into " " on the twitch server side
         // so we should use %2B instead.
         var jsonUrl = "https://api.twitch.tv/kraken/streams?client_id=ms529ptsbx3rk8sf3mk7m50othshk1i&game=" + encodeURIComponent(gameToShow);
+        jsonUrl += "&pleasedontcache=" + Math.random();
         $.ajax({
             url: jsonUrl,
             dataType: 'jsonp',
@@ -220,6 +221,7 @@ $(function() {
     function showGamesCards() {
         streamsContainer.remove();
         var jsonUrl = 'https://api.twitch.tv/kraken/games/top?client_id=ms529ptsbx3rk8sf3mk7m50othshk1i&limit=100';
+        jsonUrl += "&pleasedontcache=" + Math.random();
         $.ajax({
             url: jsonUrl,
             dataType: 'jsonp',
@@ -239,11 +241,19 @@ $(function() {
             document.title = "Twitchn - " + gameToShow;
             instructionsContainer.remove();
             getTopStreams();
+
+            // Refresh list of top streams frequently
             var threeMinutesInMs = 1000 * 60 * 3;
             setInterval(getTopStreams, threeMinutesInMs);
+
         } else {
             showGamesCards();
         }
+
+        // Refresh the entire page once in a while because the twitch
+        // embeds leak memory and crash the tab every 3-6 hours
+        var oneHourMs = 1000 * 60 * 60;
+        setTimeout(function() {window.location.reload();}, oneHourMs);
 
         // export debug functions
         mydebug.previouslyShowingChannels = function() { return previouslyShowingChannels;};
