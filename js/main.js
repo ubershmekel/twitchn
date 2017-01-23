@@ -112,6 +112,10 @@ $(function() {
     
     function showChannels(newChannels) {
         var channelKey = 'channel';
+        
+        // Logging to catch issues with a streamer being offline and not removed
+        console.log('newChannels:', new Date(), newChannels);
+        
         // Mark previous streams for deletion.
         var previousElements = streamsContainer.children();
         previouslyShowingChannels = [];
@@ -202,6 +206,7 @@ $(function() {
         // `encodeURIComponent` because "+" turns into " " on the twitch server side
         // so we should use %2B instead.
         var jsonUrl = "https://api.twitch.tv/kraken/streams?client_id=ms529ptsbx3rk8sf3mk7m50othshk1i&game=" + encodeURIComponent(gameToShow);
+        // Trying to avoid the browser caching the results and causing us to show an offline stream.
         jsonUrl += "&pleasedontcache=" + Math.random();
         $.ajax({
             url: jsonUrl,
@@ -265,3 +270,16 @@ $(function() {
     
     main();
 });
+
+
+function clickGame(el) {
+    // You might be wondering why not just use "<a href='?game=..."
+    // The reason is the amount of panels is dynamic and updating all the hrefs would be tedious
+    // though it's probably the right thing to do.
+    var game = el.getAttribute('value');
+    var panels = document.getElementById("amountOfPanels").getAttribute('value');
+    window.location.href = "?game=" + game + "&panels=" + panels;
+    
+    // return false so the form submit does not fire
+    return false;
+}

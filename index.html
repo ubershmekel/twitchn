@@ -36,7 +36,7 @@
         
         <script id="channelCardTemplate" type="x-tmpl-mustache">
             {{#top}}
-                <button name="game" type="submit" value="{{ game.name }}" class="gameCard" title="{{ game.name }}">
+                <button name="game" type="submit" value="{{ game.name }}" class="gameCard" title="{{ game.name }}" onclick="return clickGame(this);">
                     <img src="{{ game.box.medium }}" alt="{{ game.name }}" /><br />
                     <p class="gameNameOnCard">{{ game.name }}</p>
                     <p class="gameNameOnCard">{{ viewers }} / {{ channels }}</p>
@@ -56,23 +56,23 @@
             <h3>Twitchn</h3>
             <form id="gameNameForm" action="" method="get" enctype="text/plain">
                 <p>
-                    Pick a game and watch the most popular streams on multiple panels at once
+                    Pick a game and watch the most popular streams on one or multiple panels at once
                 </p>
-
-                Game name: <input list="gamesList" name="game" />
-                Amount of panels: <input type="text" name="panels" value="4" />
                 
-                <input id="flashEmbedRadio" type="radio" value="flash" name="embed">
-                <label for="flashEmbedRadio">Flash</label>
-                <input id="htmlEmbedRadio" type="radio" value="html5" name="embed" checked="checked">
-                <label for="htmlEmbedRadio">HTML5</label>
-                
-                <input type="submit" value="Submit" />
+                <div id="allInputs>
+                    <span class="inputBox">Game name: <input id="gameName" list="gamesList" name="game" /></span>
+                    <span class="inputBox">Amount of panels: <input id="amountOfPanels" type="text" name="panels" value="4" /></span>
+                    <input type="submit" value="Submit" />
+                </div>
                 
                 <div id="gameCardsContainer"></div>
             </form>
         </div>
         <div id="streamsContainer"></div>
+        
+        <div id="notes">
+            The top streams update every 3 minutes or when a stream goes offline. When watching a stream the page refreshes entirely once an hour because the twitch player has a memory leak that slowly kills the browser.
+        </div>
 
         <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.12.0.min.js"><\/script>')</script>

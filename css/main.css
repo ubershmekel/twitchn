@@ -349,5 +349,17 @@ p {
 }
 
 #githubLink {
-    float: right;
+    position: absolute;
+    right: 0;
+}
+
+#notes {
+    margin: auto;
+    padding: 1em;
+    text-align: center;
+}
+
+.inputBox {
+    margin: 1em;
+    white-space: nowrap; /* for when the window is narrow so the label stays with the text input box */
 }
