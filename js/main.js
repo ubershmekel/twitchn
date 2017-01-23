@@ -35,8 +35,9 @@ $(function() {
     }
 
     function streamWentOffline(e) {
-        console.log("Stream went offline: ", e);
-        getTopStreams();
+        console.log("Stream went offline: ", e, new Date());
+        // Giving the API a moment to catch up with the stream going offline
+        setTimeout(getTopStreams, 5000);
     }
     
     function embedTwitchFlash(channelName) {
@@ -80,8 +81,10 @@ $(function() {
         var player = new Twitch.Player(streamsContainerId, options);
         player.setVolume(0); // 1.0 = max
         
-        // "offline": Emitted when loaded channel goes offline.
-        player.addEventListener("offline", streamWentOffline);
+        // Twitch.Player.OFFLINE: Emitted when loaded channel goes offline.
+        player.addEventListener(Twitch.Player.OFFLINE, streamWentOffline);
+        // Twitch.Player.ENDED : Emitted when video or stream ends.
+        player.addEventListener(Twitch.Player.ENDED, streamWentOffline);
     }
     
     function roundDecimal(num, precision) {
@@ -221,6 +224,9 @@ $(function() {
         var template = $('#channelCardTemplate').html();
         var html = Mustache.render(template, data);
         $('#gameCardsContainer').html(html);
+        
+        // update the hrefs to the panel count
+        onDataChange();
     }
     
     function showGamesCards() {
@@ -271,15 +277,15 @@ $(function() {
     main();
 });
 
+function getPanelCount() {
+    return +document.getElementById("amountOfPanels").value;
+}
 
-function clickGame(el) {
-    // You might be wondering why not just use "<a href='?game=..."
-    // The reason is the amount of panels is dynamic and updating all the hrefs would be tedious
-    // though it's probably the right thing to do.
-    var game = el.getAttribute('value');
-    var panels = document.getElementById("amountOfPanels").getAttribute('value');
-    window.location.href = "?game=" + game + "&panels=" + panels;
-    
-    // return false so the form submit does not fire
-    return false;
+function onDataChange() {
+    var panelCount = getPanelCount();
+    $('a.gameCard').each(function(index, el) {
+        var game = el.getAttribute('value');
+        var url = "?game=" + game + "&panels=" + panelCount;
+        el.setAttribute('href', url);
+    });
 }

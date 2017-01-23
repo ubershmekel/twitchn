@@ -36,11 +36,11 @@
         
         <script id="channelCardTemplate" type="x-tmpl-mustache">
             {{#top}}
-                <button name="game" type="submit" value="{{ game.name }}" class="gameCard" title="{{ game.name }}" onclick="return clickGame(this);">
+                <a href="gets updated in js by onDataChange" value="{{ game.name }}" class="gameCard" title="{{ game.name }}">
                     <img src="{{ game.box.medium }}" alt="{{ game.name }}" /><br />
                     <p class="gameNameOnCard">{{ game.name }}</p>
                     <p class="gameNameOnCard">{{ viewers }} / {{ channels }}</p>
-                </button>
+                </a>
             {{/top}}
             
             <datalist id="gamesList" >
@@ -61,7 +61,7 @@
                 
                 <div id="allInputs>
                     <span class="inputBox">Game name: <input id="gameName" list="gamesList" name="game" /></span>
-                    <span class="inputBox">Amount of panels: <input id="amountOfPanels" type="text" name="panels" value="4" /></span>
+                    <span class="inputBox">Amount of panels: <input id="amountOfPanels" type="text" name="panels" value="4" oninput="onDataChange();" /></span>
                     <input type="submit" value="Submit" />
                 </div>
                 
