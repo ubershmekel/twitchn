@@ -8,7 +8,7 @@ $(function() {
         flash: 'flash',
         iframe: 'iframe',
     };
-    var embedType;
+    var embedType = embedTypesEnum.html5;
     
     var streamsContainerId = "streamsContainer";
     var streamsContainer = $('#' + streamsContainerId);
