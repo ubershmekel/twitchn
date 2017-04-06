@@ -1,20 +1,20 @@
+/*global Twitch $ error humane Mustache */
+
 var mydebug = {};
 
 $(function() {
     var defaultStreamsToShowCount;
     var gameToShow;
-    var embedTypesEnum = {
-        html5: 'html5',
-        flash: 'flash',
-        iframe: 'iframe',
-    };
-    var embedType = embedTypesEnum.html5;
     
     var streamsContainerId = "streamsContainer";
+    var channelKey = 'channel';
     var streamsContainer = $('#' + streamsContainerId);
     var instructionsContainer = $('#instructionsContainer');
     var previouslyShowingChannels = [];
     var isAjaxing = false;
+    var recentlyOffline = {};
+    var players = [];
+    mydebug.players = players;
 
     function indexToPositionInTable(index, amountOfSlots) {
         var oneDimCount = Math.ceil(Math.sqrt(amountOfSlots));
@@ -34,57 +34,57 @@ $(function() {
         }
     }
 
-    function streamWentOffline(e) {
-        console.log("Stream went offline: ", e, new Date());
-        // Giving the API a moment to catch up with the stream going offline
-        setTimeout(getTopStreams, 5000);
-    }
-    
-    function embedTwitchFlash(channelName) {
-        // prevents the 10 js errors, but shows the old flash UI and seems to be a bit slower.
-        var percent = '"50%"';
-        var e = $('<object type="application/x-shockwave-flash"' +
-            ' height=' + percent +
-            ' width=' + percent +
-            ' id="embed_' + channelName +
-            '" class="stream" data="https://www.twitch.tv/widgets/live_embed_player.swf?channel="' + channelName +
-            '"><param name="allowFullScreen" value="true" /><param name="allowScriptAccess" value="always" /><param name="allowNetworking" value="all" />' + 
-            '<param name="movie" value="https://www.twitch.tv/widgets/live_embed_player.swf" /><param name="flashvars" value="hostname=www.twitch.tv&channel=' +
-            channelName + '&auto_play=true&start_volume=0" /></object>');
-        streamsContainer.append(e);
-    }
-    
-    function embedTwitchIframe(channelName) {
-        // This does not require the twitch js file
-        // but has no "offline" event.
-        var percent = '"50%"';
-        var elementStr = '<iframe' +
-            ' src="https://player.twitch.tv/?channel=' + channelName + '"' +
-            ' height=' + percent +
-            ' width=' + percent +
-            ' frameborder="0"' +
-            ' scrolling="no"'+
-            ' allowfullscreen="true">' +
-            ' </iframe>';
-        
-        streamsContainer.append($(elementStr));
-    }
-        
-    function embedTwitchLib(channelName, widthAndHeight) {
-        // Using this embed mechanism
-        
-        var options = {
-            width: widthAndHeight,
-            height: widthAndHeight,
-            channel: channelName
+    function createPlayer() {
+        var instance = {};
+
+        instance.streamWentOfflineEvent = function() {
+            var channelName = instance.channelName;
+            console.log("Stream went offline: ", new Date(), channelName);
+            recentlyOffline[channelName] = new Date();
+            // Giving the API a moment to catch up with the stream going offline
+            setTimeout(getTopStreams, 1000);
         };
-        var player = new Twitch.Player(streamsContainerId, options);
-        player.setVolume(0); // 1.0 = max
-        
-        // Twitch.Player.OFFLINE: Emitted when loaded channel goes offline.
-        player.addEventListener(Twitch.Player.OFFLINE, streamWentOffline);
-        // Twitch.Player.ENDED : Emitted when video or stream ends.
-        player.addEventListener(Twitch.Player.ENDED, streamWentOffline);
+
+        instance.init = function(channelName, widthAndHeight) {
+            // Only call this once please or you might leak handlers.
+            instance.channelName = channelName;
+            var options = {
+                width: widthAndHeight,
+                height: widthAndHeight,
+                channel: channelName
+            };
+            instance._player = new Twitch.Player(streamsContainerId, options);
+            instance._player.setVolume(0); // 1.0 = max
+            
+            // Twitch.Player.OFFLINE: Emitted when loaded channel goes offline.
+            instance._player.addEventListener(Twitch.Player.OFFLINE, instance.streamWentOfflineEvent);
+            // Twitch.Player.ENDED : Emitted when video or stream ends.
+            instance._player.addEventListener(Twitch.Player.ENDED, instance.streamWentOfflineEvent);
+
+            instance.element = streamsContainer.children().last()[0];
+            // document this element's channel name
+            $(instance.element).data(channelKey, channelName);
+            
+        };
+
+        instance.setChannel = function(channelName) {
+            instance.channelName = channelName;
+            instance._player.setChannel(channelName);
+            instance._player.play();
+        };
+
+        instance.isOnline = function() {
+            return !instance._player.getEnded();
+        }
+
+        return instance;
+    }
+
+    function embedTwitch(channelName, widthAndHeight) {
+        var newPlayer = createPlayer();
+        newPlayer.init(channelName, widthAndHeight);
+        players.push(newPlayer);
+        return newPlayer;
     }
     
     function roundDecimal(num, precision) {
@@ -96,36 +96,23 @@ $(function() {
         return +(bigger + 'e-' + precision);
     }
     
-    function embedTwitch(channelName, widthAndHeight) {
-        switch(embedType) {
-            case embedTypesEnum.iframe:
-                embedTwitchIframe(channelName, widthAndHeight);
-                break;
-            case embedTypesEnum.flash:
-                embedTwitchFlash(channelName, widthAndHeight);
-                break;
-            case embedTypesEnum.html5:
-                embedTwitchLib(channelName, widthAndHeight);
-                break;
-            default:
-                embedTwitchLib(channelName, widthAndHeight);
-                break;
-        }
-    }
-    
     function showChannels(newChannels) {
-        var channelKey = 'channel';
         
         // Logging to catch issues with a streamer being offline and not removed
         console.log('newChannels:', new Date(), newChannels);
         
         // Mark previous streams for deletion.
-        var previousElements = streamsContainer.children();
         previouslyShowingChannels = [];
-        for(var i = 0; i < previousElements.length; i++) {
-            previousElements[i].keepAlive = false;
-            var channel = $(previousElements[i]).data(channelKey);
-            previouslyShowingChannels.push(channel);
+        var reusePlayers = [];
+        for(var i = 0; i < players.length; i++) {
+            // Reusing existing players that fell out of favor or went offline
+            // to avoid memory leaks
+            // https://discuss.dev.twitch.tv/t/gigabytes-of-memory-leaks-when-removing-twitch-embeds/9836
+            var existingChannel = players[i].channelName;
+            previouslyShowingChannels.push(existingChannel);
+            if (newChannels.indexOf(existingChannel) == -1 || !players[i].isOnline()) {
+                reusePlayers.push(players[i]);
+            }
         }
         
         // Reposition and embed channels
@@ -141,17 +128,20 @@ $(function() {
             var el;
             if(previouslyShowingChannelsIndex > -1) {
                 // Found loaded channel - just reposition it
-                el = previousElements[previouslyShowingChannelsIndex];
-                // Don't delete it
-                el.keepAlive = true;
+                el = players[previouslyShowingChannelsIndex].element;
             } else {
-                // New stream, create it
+                // New stream, create it or repurpose an existing player
                 console.log("Embedding new: " + channelName);
                 var widthAndHeight = percentOfWindow + "%";
-                embedTwitch(channelName, widthAndHeight);
-                el = streamsContainer.children().last()[0];
-                // document this element's channel name
-                $(el).data(channelKey, channelName);
+                if (reusePlayers.length > 0) {
+                    // replace a player that has fallen off the top n
+                    var playerToReplace = reusePlayers.shift();
+                    playerToReplace.setChannel(channelName);
+                    el = playerToReplace.element;
+                } else {
+                    // create a new player
+                    el = embedTwitch(channelName, widthAndHeight).element;
+                };
             }
 
             var pos = indexToPositionInTable(j, defaultStreamsToShowCount);
@@ -162,11 +152,45 @@ $(function() {
         }
         
         // Remove excess channels
-        for(var k = 0; k < previousElements.length; k++) {
-            if(previousElements[k].keepAlive)
+        /*for(var k = 0; k < players.length; k++) {
+            if(players[k].isOnline())
                 continue;
             previousElements[k].remove();
+        }*/
+    }
+
+    function filterStreams(streams) {
+        // Get the channels that did not recently go offline
+        
+        var streamsToShowCount = defaultStreamsToShowCount;
+        if (defaultStreamsToShowCount > streams.length) {
+            streamsToShowCount = streams.length;
         }
+        var secondsItTakesTwitchApiToUpdate = 180;
+        var newChannels = [];
+        var now = new Date();
+
+        for(var i = 0; i < streams.length; i++) {
+            if (newChannels.length == streamsToShowCount) {
+                break;
+            }
+            var channelName = streams[i].channel.name;
+            var whenLastOffline = recentlyOffline[channelName];
+            if (whenLastOffline) {
+                // If this channel recently went offline then do not include it.
+                // The problem is the twitch API is cached for a few minutes which can
+                // cause us to show an offline stream.
+                // "Delay in removing offline channels from streams API #659"
+                // https://github.com/justintv/Twitch-API/issues/659
+                var secondsPast = (now.getTime() - whenLastOffline.getTime()) / 1000;
+                if (secondsPast < secondsItTakesTwitchApiToUpdate) {
+                    continue;
+                }
+            }
+            newChannels.push(channelName);
+        }
+        
+        return newChannels;
     }
 
     function handleGameStreams(data) {
@@ -180,17 +204,8 @@ $(function() {
             // most popular first
             return b.viewers - a.viewers;
         });
-        
-        var streamsToShow = defaultStreamsToShowCount;
-        if (defaultStreamsToShowCount > streams.length)
-            streamsToShow = streams.length;
-        
-        var newChannels = [];
-        for(var i = 0; i < streamsToShow; i++) {
-            var channelName = streams[i].channel.name;
-            newChannels.push(channelName);
-        }
-        
+
+        var newChannels = filterStreams(streams);
         showChannels(newChannels);
         isAjaxing = false;
     }
@@ -243,10 +258,27 @@ $(function() {
     }
     
     function main() {
-        params = urlGetParams();
+        var params = urlGetParams();
         defaultStreamsToShowCount = params.panels || 4;
         gameToShow = params.game;
-        embedType = params.embed;
+        var debugChannel = params.debug;
+        if (debugChannel) {
+            // Debugging a specific channel to show so I can fiddle with
+            // a channel going offline
+            // Hook into getTopStreams to fake what the api would return
+            getTopStreams = function() {
+                var data = {
+                    streams: [
+                        {
+                            channel: {
+                                name: debugChannel
+                            }
+                        }
+                    ]
+                };
+                handleGameStreams(data);
+            };
+        }
 
         if(gameToShow) {
             document.title = "Twitchn - " + gameToShow;
@@ -271,12 +303,17 @@ $(function() {
         // export debug functions
         mydebug.previouslyShowingChannels = function() { return previouslyShowingChannels;};
         mydebug.showChannels = showChannels;
+        mydebug.getTopStreams  = getTopStreams;
     }
     
     
     main();
 });
 
+///////////////////////////////////////////////////////////////////////////////
+// Functions used by html elements are on the global namespace.
+// probably should clean this up one day.
+///////////////////////////////////////////////////////////////////////////////
 function getPanelCount() {
     return +document.getElementById("amountOfPanels").value;
 }
