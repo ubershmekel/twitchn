@@ -15,6 +15,10 @@ $(function() {
     var recentlyOffline = {};
     var players = [];
     mydebug.players = players;
+    var defaultHeaders = {
+        "Client-ID": "ms529ptsbx3rk8sf3mk7m50othshk1i",
+        "Accept": "application/vnd.twitchtv.v5+json",
+    }
 
     function indexToPositionInTable(index, amountOfSlots) {
         var oneDimCount = Math.ceil(Math.sqrt(amountOfSlots));
@@ -223,15 +227,16 @@ $(function() {
         isAjaxing = true;
         // `encodeURIComponent` because "+" turns into " " on the twitch server side
         // so we should use %2B instead.
-        var jsonUrl = "https://api.twitch.tv/kraken/streams?client_id=ms529ptsbx3rk8sf3mk7m50othshk1i&game=" + encodeURIComponent(gameToShow);
+        var jsonUrl = "https://api.twitch.tv/kraken/streams?game=" + encodeURIComponent(gameToShow);
         // Trying to avoid the browser caching the results and causing us to show an offline stream.
         jsonUrl += "&pleasedontcache=" + Math.random();
         $.ajax({
             url: jsonUrl,
-            dataType: 'jsonp',
             success: handleGameStreams,
             error: failedAjax,
-            timeout: 5000
+            headers: defaultHeaders,
+            timeout: 5000,
+            jsonp: false,
         });
     }
     
@@ -246,14 +251,15 @@ $(function() {
     
     function showGamesCards() {
         streamsContainer.remove();
-        var jsonUrl = 'https://api.twitch.tv/kraken/games/top?client_id=ms529ptsbx3rk8sf3mk7m50othshk1i&limit=100';
+        var jsonUrl = 'https://api.twitch.tv/kraken/games/top?limit=100';
         jsonUrl += "&pleasedontcache=" + Math.random();
         $.ajax({
             url: jsonUrl,
-            dataType: 'jsonp',
             success: handleGamesList,
             error: failedAjax,
-            timeout: 5000
+            headers: defaultHeaders,
+            timeout: 5000,
+            jsonp: false,
         });
     }
     
