@@ -2,10 +2,10 @@
 
 var mydebug = {};
 
-$(function() {
+$(function () {
     var defaultStreamsToShowCount;
     var gameToShow;
-    
+
     var streamsContainerId = "streamsContainer";
     var channelKey = 'channel';
     var streamsContainer = $('#' + streamsContainerId);
@@ -15,9 +15,50 @@ $(function() {
     var recentlyOffline = {};
     var players = [];
     mydebug.players = players;
+
+    const tokenKey = 'twitch-token';
+    function getTwitchToken() {
+        let token = localStorage.getItem(tokenKey);
+        if (token && token.length > 0) {
+            return token;
+        }
+        token = getTwitchTokenFromHash()
+        if (token && token.length > 0) {
+            saveTwitchToken(token);
+            return token;
+        }
+        return token;
+    }
+
+    function saveTwitchToken(token) {
+        if (!token || token.length === 0) {
+            console.warn("tried to save an empty token. Ignoring that: ", token);
+            return;
+        }
+        localStorage.setItem(tokenKey, token);
+    }
+
+    function getTwitchTokenFromHash() {
+        const parts = window.location.hash.split(/[=&]/);
+        let token = '';
+        for (let i = 0; i < parts.length; i++) {
+            if (parts[i].endsWith("access_token")) {
+                token = parts[i + 1];
+                break;
+            }
+        }
+        if (token.length === 0) {
+            console.warn("Failed to get access token");
+        }
+        return token;
+    }
+
+
+    var twitchToken = getTwitchToken();
     var defaultHeaders = {
         "Client-ID": "ms529ptsbx3rk8sf3mk7m50othshk1i",
-        "Accept": "application/vnd.twitchtv.v5+json",
+        // "Accept": "application/vnd.twitchtv.v5+json",
+        "Authorization": "Bearer " + twitchToken,
     }
 
     function indexToPositionInTable(index, amountOfSlots) {
@@ -27,11 +68,11 @@ $(function() {
             y: Math.floor(index / oneDimCount)
         };
     }
-    
+
     function urlGetParams() {
         try {
             var search = location.search.substring(1); // `1` skips question mark
-            var jsonStr = '{"' + decodeURIComponent(search.replace(/\+/g, '%20')).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"')  + '"}';
+            var jsonStr = '{"' + decodeURIComponent(search.replace(/\+/g, '%20')).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}';
             return JSON.parse(jsonStr);
         } catch (e) {
             return {};
@@ -41,7 +82,7 @@ $(function() {
     function createPlayer() {
         var instance = {};
 
-        instance.streamWentOfflineEvent = function() {
+        instance.streamWentOfflineEvent = function () {
             var channelName = instance.channelName;
             console.log("Stream went offline: ", new Date(), channelName);
             recentlyOffline[channelName] = new Date();
@@ -49,7 +90,7 @@ $(function() {
             setTimeout(getTopStreams, 1000);
         };
 
-        instance.init = function(channelName, widthAndHeight) {
+        instance.init = function (channelName, widthAndHeight) {
             // Only call this once please or you might leak handlers.
             instance.channelName = channelName;
             var options = {
@@ -59,7 +100,7 @@ $(function() {
             };
             instance._player = new Twitch.Player(streamsContainerId, options);
             instance._player.setVolume(0); // 1.0 = max
-            
+
             // Twitch.Player.OFFLINE: Emitted when loaded channel goes offline.
             instance._player.addEventListener(Twitch.Player.OFFLINE, instance.streamWentOfflineEvent);
             // Twitch.Player.ENDED : Emitted when video or stream ends.
@@ -68,16 +109,16 @@ $(function() {
             instance.element = streamsContainer.children().last()[0];
             // document this element's channel name
             $(instance.element).data(channelKey, channelName);
-            
+
         };
 
-        instance.setChannel = function(channelName) {
+        instance.setChannel = function (channelName) {
             instance.channelName = channelName;
             instance._player.setChannel(channelName);
             instance._player.play();
         };
 
-        instance.isOnline = function() {
+        instance.isOnline = function () {
             return !instance._player.getEnded();
         }
 
@@ -90,7 +131,7 @@ $(function() {
         players.push(newPlayer);
         return newPlayer;
     }
-    
+
     function roundDecimal(num, precision) {
         // Simplification of https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/round
         // Time 10 to the power of precision and round
@@ -99,16 +140,16 @@ $(function() {
         // `+` converts to number
         return +(bigger + 'e-' + precision);
     }
-    
+
     function showChannels(newChannels) {
-        
+
         // Logging to catch issues with a streamer being offline and not removed
         console.log('newChannels:', new Date(), newChannels);
-        
+
         // Mark previous streams for deletion.
         previouslyShowingChannels = [];
         var reusePlayers = [];
-        for(var i = 0; i < players.length; i++) {
+        for (var i = 0; i < players.length; i++) {
             // Reusing existing players that fell out of favor or went offline
             // to avoid memory leaks
             // https://discuss.dev.twitch.tv/t/gigabytes-of-memory-leaks-when-removing-twitch-embeds/9836
@@ -118,19 +159,19 @@ $(function() {
                 reusePlayers.push(players[i]);
             }
         }
-        
+
         // Reposition and embed channels
         var oneDimCount = Math.ceil(Math.sqrt(defaultStreamsToShowCount));
         // E.g. "50%" for 4 windows, "33.33%" for 9.
         // This page says that "33.33%" is accurate enough for all screens.
         // http://stackoverflow.com/questions/5158735/best-way-to-represent-1-3rd-of-100-in-css
         var percentOfWindow = roundDecimal(100.0 / oneDimCount, 2);
-        
-        for(var j = 0; j < newChannels.length; j++) {
+
+        for (var j = 0; j < newChannels.length; j++) {
             var channelName = newChannels[j];
             var previouslyShowingChannelsIndex = previouslyShowingChannels.indexOf(channelName);
             var el;
-            if(previouslyShowingChannelsIndex > -1) {
+            if (previouslyShowingChannelsIndex > -1) {
                 // Found loaded channel - just reposition it
                 el = players[previouslyShowingChannelsIndex].element;
             } else {
@@ -154,7 +195,7 @@ $(function() {
             el.style.left = percentX;
             el.style.top = percentY;
         }
-        
+
         // Remove excess channels
         /*for(var k = 0; k < players.length; k++) {
             if(players[k].isOnline())
@@ -165,7 +206,7 @@ $(function() {
 
     function filterStreams(streams) {
         // Get the channels that did not recently go offline
-        
+
         var streamsToShowCount = defaultStreamsToShowCount;
         if (defaultStreamsToShowCount > streams.length) {
             streamsToShowCount = streams.length;
@@ -174,11 +215,11 @@ $(function() {
         var newChannels = [];
         var now = new Date();
 
-        for(var i = 0; i < streams.length; i++) {
+        for (var i = 0; i < streams.length; i++) {
             if (newChannels.length == streamsToShowCount) {
                 break;
             }
-            var channelName = streams[i].channel.name;
+            var channelName = streams[i].user_login;
             var whenLastOffline = recentlyOffline[channelName];
             if (whenLastOffline) {
                 // If this channel recently went offline then do not include it.
@@ -193,41 +234,63 @@ $(function() {
             }
             newChannels.push(channelName);
         }
-        
+
         return newChannels;
     }
 
     function handleGameStreams(data) {
-        console.log(data);
-        var streams = data.streams;
-        if(!streams || streams.length === 0) {
+        // game_id: "509664"
+        // game_name: "Tabletop RPGs"
+        // id: "44179372205"
+        // is_mature: false
+        // language: "pt"
+        // started_at: "2021-10-23T20:45:41Z"
+        // tag_ids: ['39ee8140-901a-4762-bfca-8260dea1310f']
+        // thumbnail_url: "https://static-cdn.jtvnw.net/previews-ttv/live_user_cellbit-{width}x{height}.jpg"
+        // title: "Episódio 7 - Ordem Paranormal: Calamidade #Calamidade"
+        // type: "live"
+        // user_id: "28579002"
+        // user_login: "cellbit"
+        // user_name: "Cellbit"
+        // viewer_count: 84950
+
+        console.log("handleGameStreams", data);
+        var streams = data.data;
+        if (!streams || streams.length === 0) {
             error("No streams for this game: " + gameToShow);
             return;
         }
-        streams.sort(function(a, b) {
+        streams.sort(function (a, b) {
             // most popular first
-            return b.viewers - a.viewers;
+            return b.viewer_count - a.viewer_count;
         });
 
         var newChannels = filterStreams(streams);
         showChannels(newChannels);
         isAjaxing = false;
     }
-    
+
     function failedAjax(err) {
+        let errorString = "An error fetching streams: ";
+        if (err.statusText) {
+            errorString += err.statusText;
+        } else {
+            errorString += toString(err);
+        }
         console.warn('Failed ajax:', err);
-        humane.error("An error fetching streams: " + err);
+        humane.error(errorString);
         isAjaxing = false;
     }
-    
+
     function getTopStreams() {
-        if(isAjaxing)
+        console.log("getTopStreams");
+        if (isAjaxing)
             return;
 
         isAjaxing = true;
         // `encodeURIComponent` because "+" turns into " " on the twitch server side
         // so we should use %2B instead.
-        var jsonUrl = "https://api.twitch.tv/kraken/streams?game=" + encodeURIComponent(gameToShow);
+        var jsonUrl = "https://api.twitch.tv/helix/streams?game=" + encodeURIComponent(gameToShow);
         // Trying to avoid the browser caching the results and causing us to show an offline stream.
         jsonUrl += "&pleasedontcache=" + Math.random();
         $.ajax({
@@ -239,19 +302,35 @@ $(function() {
             jsonp: false,
         });
     }
-    
+
     function handleGamesList(data) {
+        console.log("handleGamesList", data);
+        //{
+        // box_art_url: "https://static-cdn.jtvnw.net/ttv-boxart/Just%20Chatting-{width}x{height}.jpg"
+        // id: "509658"
+        // name: "Just Chatting"
+        //}
+        const gamesList = data.data.map(item => {
+            return {
+                name: item.name,
+                boxImgSrc: item.box_art_url.replace('{width}', '136').replace('{height}', '200'),
+                game_id: item.id,
+            }
+        });
+
+        const templateData = { top: gamesList };
         var template = $('#channelCardTemplate').html();
-        var html = Mustache.render(template, data);
+        var html = Mustache.render(template, templateData);
         $('#gameCardsContainer').html(html);
-        
+
         // update the hrefs to the panel count
         onDataChange();
     }
-    
+
     function showGamesCards() {
+        console.log("showGamesCards");
         streamsContainer.remove();
-        var jsonUrl = 'https://api.twitch.tv/kraken/games/top?limit=100';
+        var jsonUrl = 'https://api.twitch.tv/helix/games/top?limit=100';
         jsonUrl += "&pleasedontcache=" + Math.random();
         $.ajax({
             url: jsonUrl,
@@ -262,7 +341,7 @@ $(function() {
             jsonp: false,
         });
     }
-    
+
     function main() {
         var params = urlGetParams();
         defaultStreamsToShowCount = params.panels || 4;
@@ -272,7 +351,7 @@ $(function() {
             // Debugging a specific channel to show so I can fiddle with
             // a channel going offline
             // Hook into getTopStreams to fake what the api would return
-            getTopStreams = function() {
+            getTopStreams = function () {
                 var data = {
                     streams: [
                         {
@@ -286,7 +365,7 @@ $(function() {
             };
         }
 
-        if(gameToShow) {
+        if (gameToShow) {
             document.title = "Twitchn - " + gameToShow;
             instructionsContainer.remove();
             getTopStreams();
@@ -304,15 +383,15 @@ $(function() {
         var oneHourMs = 1000 * 60 * 60;
         // reload(true) is a hard refresh
         // http://stackoverflow.com/questions/2099201/javascript-hard-refresh-of-current-page
-        setTimeout(function() {window.location.reload(true);}, oneHourMs);
+        setTimeout(function () { window.location.reload(true); }, oneHourMs);
 
         // export debug functions
-        mydebug.previouslyShowingChannels = function() { return previouslyShowingChannels;};
+        mydebug.previouslyShowingChannels = function () { return previouslyShowingChannels; };
         mydebug.showChannels = showChannels;
-        mydebug.getTopStreams  = getTopStreams;
+        mydebug.getTopStreams = getTopStreams;
     }
-    
-    
+
+
     main();
 });
 
@@ -326,7 +405,7 @@ function getPanelCount() {
 
 function onDataChange() {
     var panelCount = getPanelCount();
-    $('a.gameCard').each(function(index, el) {
+    $('a.gameCard').each(function (index, el) {
         var game = el.getAttribute('value');
         var url = "?game=" + game + "&panels=" + panelCount;
         el.setAttribute('href', url);

@@ -1,45 +1,47 @@
 <!doctype html>
 <html class="no-js" lang="">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>Twitchn - Show multiple screens of a game on twitch</title>
-        <meta name="description" content="Show multiple streams of a game on twitch at once">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="shortcut icon" href="favicon.ico" />
 
-        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/themes/flatty.css" />
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/humane.js"></script>
-        <script>
-            humane.timeout = 3500;
-            humane.error = humane.spawn({ addnCls: 'humane-flatty-error'});
-            window.onerror = function(msg, url, linenumber) {
-                // Tell users when errors occur
-                // http://stackoverflow.com/questions/2604976/javascript-how-to-display-script-errors-in-a-popup-alert/2604997#2604997
-                humane.error("An error: " + msg);
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Twitchn - Show multiple screens of a game on twitch</title>
+    <meta name="description" content="Show multiple streams of a game on twitch at once">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="favicon.ico" />
 
-                // `false` to report on dev console too
-                return false;
-            };
-            function error(msg) {
-                humane.error(msg);
-                console.error(msg);
-            }
-        </script>
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/themes/flatty.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/humane.js"></script>
+    <script>
+        humane.timeout = 3500;
+        humane.error = humane.spawn({ addnCls: 'humane-flatty-error' });
+        window.onerror = function (msg, url, linenumber) {
+            // Tell users when errors occur
+            // http://stackoverflow.com/questions/2604976/javascript-how-to-display-script-errors-in-a-popup-alert/2604997#2604997
+            humane.error("An error: " + msg);
 
-        <link rel="stylesheet" href="css/normalize.css">
-        <link rel="stylesheet" href="css/main.css">
-        <script src="js/vendor/modernizr-2.8.3.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
-    </head>
-    <body>
-        
-        <script id="channelCardTemplate" type="x-tmpl-mustache">
+            // `false` to report on dev console too
+            return false;
+        };
+        function error(msg) {
+            humane.error(msg);
+            console.error(msg);
+        }
+    </script>
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
+</head>
+
+<body>
+
+    <script id="channelCardTemplate" type="x-tmpl-mustache">
             {{#top}}
-                <a href="gets updated in js by onDataChange" value="{{ game.name }}" class="gameCard" title="{{ game.name }}">
-                    <img src="{{ game.box.medium }}" alt="{{ game.name }}" /><br />
-                    <p class="gameNameOnCard">{{ game.name }}</p>
-                    <p class="gameNameOnCard">{{ viewers }} / {{ channels }}</p>
+                <a href="gets updated in js by onDataChange" value="{{ game_id }}" class="gameCard" title="{{ name }}">
+                    <img src="{{ boxImgSrc }}" alt="{{ name }}" /><br />
+                    <p class="gameNameOnCard">{{ name }}</p>
                 </a>
             {{/top}}
             
@@ -51,43 +53,53 @@
         </script>
 
 
-        <div id="instructionsContainer">
-            <a id="githubLink" href="https://github.com/ubershmekel/twitchn">Source on github<img class="octocat" src="images/octocat.png" /></a>
-            <h3>Twitchn</h3>
-            <form id="gameNameForm" action="" method="get" enctype="text/plain">
-                <p>
-                    Pick a game and watch the most popular streams on one or multiple panels at once
-                </p>
-                
-                <div id="allInputs>
-                    <span class="inputBox">Game name: <input id="gameName" list="gamesList" name="game" /></span>
-                    <span class="inputBox">Amount of panels: <input id="amountOfPanels" type="text" name="panels" value="4" oninput="onDataChange();" /></span>
-                    <input type="submit" value="Submit" />
-                </div>
-                
-                <div id="gameCardsContainer"></div>
-            </form>
-        </div>
-        <div id="streamsContainer"></div>
-        
-        <div id="notes">
-            The top streams update every 3 minutes or when a stream goes offline. When watching a stream the page refreshes entirely once an hour because the twitch player has a memory leak that slowly kills the browser.
-        </div>
+    <div id="instructionsContainer">
+        <a id="githubLink" href="https://github.com/ubershmekel/twitchn">Source on github<img class="octocat"
+                src="images/octocat.png" /></a>
+        <h3>Twitchn</h3>
+        <form id="gameNameForm" action="" method="get" enctype="text/plain">
+            <p>
+                Pick a game and watch the most popular streams on one or multiple panels at once
+            </p>
 
-        <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
-        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.12.0.min.js"><\/script>')</script>
-        <script src= "https://player.twitch.tv/js/embed/v1.js"></script>
-        <script src="js/plugins.js"></script>
-        <script src="js/main.js"></script>
+            <div id="allInputs">
+                <span class="inputBox">Game name: <input id="gameName" list="gamesList" name="game" /></span>
+                <span class="inputBox">Amount of panels: <input id="amountOfPanels" type="text" name="panels" value="4"
+                        oninput="onDataChange();" /></span>
+                <input type="submit" value="Submit" />
+            </div>
 
-        <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
-        <script>
-            (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
-            function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
-            e=o.createElement(i);r=o.getElementsByTagName(i)[0];
-            e.src='https://www.google-analytics.com/analytics.js';
-            r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
-            ga('create','UA-4533496-22','auto');ga('send','pageview');
-        </script>
-    </body>
+            <a
+                href="https://id.twitch.tv/oauth2/authorize?client_id=ms529ptsbx3rk8sf3mk7m50othshk1i&redirect_uri=https://ubershmekel.github.io/twitchn/&response_type=token&scope=">Login
+                with Twitch</a>
+
+            <div id="gameCardsContainer"></div>
+        </form>
+    </div>
+    <div id="streamsContainer"></div>
+
+    <div id="notes">
+        The top streams update every 3 minutes or when a stream goes offline. When watching a stream the page refreshes
+        entirely once an hour because the twitch player has a memory leak that slowly kills the browser.
+    </div>
+
+    <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.12.0.min.js"><\/script>')</script>
+    <script src="https://player.twitch.tv/js/embed/v1.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+            (function (b, o, i, l, e, r) {
+                b.GoogleAnalyticsObject = l; b[l] || (b[l] =
+                    function () { (b[l].q = b[l].q || []).push(arguments) }); b[l].l = +new Date;
+                e = o.createElement(i); r = o.getElementsByTagName(i)[0];
+                e.src = 'https://www.google-analytics.com/analytics.js';
+                r.parentNode.insertBefore(e, r)
+            }(window, document, 'script', 'ga'));
+        ga('create', 'UA-4533496-22', 'auto'); ga('send', 'pageview');
+    </script>
+</body>
+
 </html>
